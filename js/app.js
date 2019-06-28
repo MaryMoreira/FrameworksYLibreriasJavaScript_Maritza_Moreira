@@ -10,8 +10,36 @@ var movimientos = 0;
 var puntuacion  = 0;
 var timerColorTitulo, timerReloj;
 
-// iniciliza el juego
-function iniciar(){
+
+// funcion que inicia el decremento del reloj
+function iniciaReloj(){
+    var dt = new Date("December 30, 2019 00:02:00");
+
+    $('#timer').text('02:00');
+
+    if(timerReloj){
+        clearInterval(timerReloj);
+    }
+
+    timerReloj = setInterval( () => {
+        dt.setSeconds( dt.getSeconds() - 1 );
+
+        let sec =  dt.getSeconds();
+        let min =  dt.getMinutes();
+
+        if(min == 0 && sec == 0){
+            clearInterval(timerReloj);
+            mostrarFinalResultados();
+            return;
+        }
+
+        $('#timer').text('0' + min + ":" + ( sec > 9 ? sec : ('0' + sec)));
+
+    }, 1000);
+}
+
+// inicializa el juego
+function iniciarJuego(){
     puntuacion  = 0;
     movimientos = 0;
 
@@ -45,12 +73,12 @@ async function llenarCaramelos(){
         caramelos[row] = [];
         for(let col=0; col < MAX_COL; ++col){
             let num = Math.floor(Math.random() * (4 - 1)) + 1; // obtiene un número aleatorio del 1 al 4
-            let obj = {data: num, row, col, selCol:false, selRow:false};
+            let obj = {data: num, row, col};
 
             curCol = '.col-' + (col+1);
             objCol = $(curCol);
             // añade el html y la imagen correspondiente
-            objCol.prepend("<div>" +
+            objCol.prepend("<div class='caramelo'>" +
                                  "<img class='caramelo' src='image/"+ num +".png' data='"+num+"' row='"+row+"' col='"+col+"'/>"+
                            "</div>");
 
@@ -64,10 +92,6 @@ async function llenarCaramelos(){
     chequearCaramelosConsecutivos(); // realiza el chequeo de caramelos consecutivos
 };
 
-function rellenarFaltantes(){
-
-}
-
 // cheuque si existen caramelos consecutivos (tres o mas) de ser
 // el caso otorga una puntuacion al jugador por cada caramelo encontrado
 async function chequearCaramelosConsecutivos(){
@@ -75,7 +99,7 @@ async function chequearCaramelosConsecutivos(){
     let enCaramelos = []; // caramelos encontrados consecutivos
 
     // CHEQUEO POR REGISTRO
-    // buscamos las concidencias de caramelos mas de tres
+    // buscamos las coincidencias de caramelos(mas de tres)
     for(let row=0; row < MAX_ROW; ++row){
         for(let col=0; col < MAX_COL; ++col){
             curImg  = caramelos[row][col];
@@ -107,7 +131,7 @@ async function chequearCaramelosConsecutivos(){
 
 
     // CHEQUEO POR COLUMNA
-    // buscamos las concidencias de caramelos mas de tres
+    // buscamos las concidencias de caramelos (mas de tres)
     for(let col=0; col < MAX_COL; ++col){
         for(let row=0; row < MAX_COL; ++row){
             curImg  = caramelos[row][col];
@@ -137,23 +161,90 @@ async function chequearCaramelosConsecutivos(){
         }
     }
 
-    await sleep(200);
+    await sleep(300);
 
     // si encontro caramelos modifica la puntuacion
     if(enCaramelos.length > 0){
-        puntuacion += (enCaramelos.length) * 100;
+        puntuacion += (enCaramelos.length) * 100; // añade 100 punto por cada caramelo eliminado
 
-        // elimina los caramelos encontrados como consecutivos
+        // realizamos la animacion de las imagenes a eliminarse
         enCaramelos.forEach ( o => {
-            o.obj.img.attr("src", "");// elimina los caramelos
+            o.obj.img.hide(350, 'swing', function () {
+              $(this).show(325, 'swing', function () {
+                $(this).hide(325, 'swing', function () {
+                    $(this).show(325, 'swing', function () {
+                        $(this).toggle( "explode" );
+                    });
+                });
+              });
+            });
         })
 
-        $('#score-text').text(puntuacion);
+        await sleep(2000);
+
+        // elimina los caramelos encontrados como consecutivos
+        await enCaramelos.forEach ( o => {
+            o.obj.img.attr("src", "");// elimina los caramelos
+            o.obj.img.attr("data", "0");// elimina los caramelos
+            o.obj.img.css("display", "");
+            o.obj.data = 0;
+        })
+
+        $('#score-text').text(puntuacion); // coloca la actual puntuacion
+
+        rellenarFaltantes(); // rellenamos los caramelos faltantes
     }
 }
 
+// realizamos el rellenado de los caramelos
+async function rellenarFaltantes(){
+    let curImg, enImg, hasImg;
 
-// cambia el titulo constantemente
+    // rellenamos los espacios en blanco de las columnas
+    // con los caramelos existentes actualmente
+    for(let col=0; col < MAX_COL; ++col){
+        for(let row=0; row < MAX_COL; ++row){
+            curImg = caramelos[row][col];
+            if(curImg.data == 0){ // busca si encima tiene alguno que tenga imagen
+                for(let enRow=row+1; enRow < MAX_COL; ++enRow){
+                    enImg = caramelos[enRow][col];
+                    if(enImg.data != 0){
+                        curImg.data = enImg.data; // coloca los datos de la imgen buscada
+                        curImg.img.attr('src', "image/"+ curImg.data +".png");
+                        curImg.img.attr("data", curImg.data);
+                        enImg.data = 0; // vacia la imagen encontrada
+                        enImg.img.attr('src', "");
+                        enImg.img.attr("data", "0");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // rellenamos con nuevos caramelos los espacios en blanco
+    for(let row=0; row < MAX_ROW; ++row){
+        hasImg = false;
+        for(let col=0; col < MAX_COL; ++col){
+            curImg = caramelos[row][col];
+
+            if(curImg.data == 0){ // busca si encima tiene alguno que tenga imagen
+                let num = Math.floor(Math.random() * (4 - 1)) + 1; // obtiene un número aleatorio del 1 al 4
+                curImg.data = num; // coloca los datos de la imagen nueva
+                curImg.img.attr('src', "image/"+ num +".png");
+                curImg.img.attr("data", num);
+                hasImg = true;
+            }
+        }
+        if(hasImg){
+            await sleep(200);
+        }
+    }
+
+    chequearCaramelosConsecutivos(); // realiza nuevamente el chequeo de caramelos consecutivos
+}
+
+// cambia el color del titulo
 function cambiaColorTitulo(){
     let cambiarTitulo = 0;
 
@@ -172,34 +263,9 @@ function cambiaColorTitulo(){
     }, 500);
 }
 
-// funcion que inicia el decremento del reloj
-function iniciaReloj(){
-    var dt = new Date("December 30, 2019 00:02:00");
 
-    $('#timer').text('02:00');
 
-    if(timerReloj){
-        clearInterval(timerReloj);
-    }
-
-    timerReloj = setInterval( () => {
-        dt.setSeconds( dt.getSeconds() - 1 );
-
-        let sec =  dt.getSeconds();
-        let min =  dt.getMinutes();
-
-        if(min == 0 && sec == 0){
-            clearInterval(timerReloj);
-            mostrarFinalResultados();
-            return;
-        }
-
-        $('#timer').text('0' + min + ":" + ( sec > 9 ? sec : ('0' + sec)));
-
-    }, 1000);
-}
-
-// funcion que muestra los resultados
+// funcion que muestra los resultados una vez concluido el tiempo
 function mostrarFinalResultados(){
 
 }
@@ -213,6 +279,6 @@ $(function(){
 
     // boton click en inicio
     $(".btn-reinicio").on("click", function() {
-           iniciar();
+        iniciarJuego();
     });
 });
