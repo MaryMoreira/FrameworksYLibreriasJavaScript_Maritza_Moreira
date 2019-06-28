@@ -1,5 +1,5 @@
 
-
+var caramelos   = [];
 var movimientos = 0;
 var puntuacion  = 0;
 var timerColorTitulo, timerReloj;
@@ -21,12 +21,38 @@ function iniciar(){
     iniciaReloj();
 }
 
+// funcion sleep
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // llenamos con todos los caramelos
-function llenarCaramelos(){
+async function llenarCaramelos(){
 
     // limpiamos los caramelos existentes
     $("div[class*='col-']").empty();
+
+    caramelos  = [];
+    let curCol, objCol;
+    for(let j=0; j < 7; ++j){
+        caramelos[j] = [];
+
+        for(let i=0; i < 7; ++i){
+            let num = Math.floor(Math.random() * (4 - 1)) + 1;
+            let obj = {num};
+
+            curCol = '.col-' + (i+1);
+            objCol = $(curCol);
+
+            caramelos[j][i] =  obj;
+            objCol.prepend("<img class='caramelo' src='image/"+ num +".png' col=' "+ j +"'  row='" + i + "' data='"+num+"'/>");
+        }
+
+        await sleep(500);
+
+    }
 };
+
 
 // cambia el titulo constantemente
 function cambiaColorTitulo(){
@@ -65,7 +91,7 @@ function iniciaReloj(){
 
         if(min == 0 && sec == 0){
             clearInterval(timerReloj);
-            mostrarResultados();
+            mostrarFinalResultados();
             return;
         }
 
@@ -75,7 +101,7 @@ function iniciaReloj(){
 }
 
 // funcion que muestra los resultados
-function mostrarResultados(){
+function mostrarFinalResultados(){
 
 }
 
@@ -83,6 +109,7 @@ function mostrarResultados(){
 // funcion document
 $(function(){
 
+    // realiza el cambio de color del titulo
     cambiaColorTitulo();
 
     // boton click en inicio
