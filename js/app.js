@@ -65,7 +65,7 @@ async function llenarCaramelos(){
 
     // limpiamos los caramelos existentes
     $("div[class*='col-']").empty();
-    let positionTablero = $(".panel-tablero").position();
+    let posImg;
 
     caramelos  = [];
     let curCol, objCol;
@@ -84,6 +84,25 @@ async function llenarCaramelos(){
 
             obj.img = $(objCol.find("img[row='"+row+"'][col='"+col+"']")); // obtiene la imagen insertada
             caramelos[row][col] =  obj; // coloca en la matriz el objeto correspondiente
+
+            despTop = ( obj.img[0].heightOffset * (MAX_COL - col) - 30 );
+
+            posImg  = obj.img.position();
+            obj.img.offset ({top: posImg.top - despTop});
+
+            obj.img.animate(
+                {
+                  top:  "+="+despTop,
+                },{
+                  step: function(now, fx){
+                    //$(obj.img).css("position","");
+                  },
+                  duration: 200,
+                  done : () => {
+                    posImg = obj.img.position ();
+                  }
+                }
+              );
         }
 
         await sleep(200);
