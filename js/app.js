@@ -45,7 +45,7 @@ async function llenarCaramelos(){
             objCol = $(curCol);
 
             caramelos[j][i] =  obj;
-            objCol.prepend("<img class='caramelo' src='image/"+ num +".png' col=' "+ j +"'  row='" + i + "' data='"+num+"'/>");
+            objCol.prepend("<div row='"+j+"' col='"+i+"'> <img class='caramelo' src='image/"+ num +".png' data='"+num+"'/> </div>");
         }
 
         await sleep(500);
