@@ -8,6 +8,7 @@ const MAX_ROW = 7;
 var caramelos   = [];
 var movimientos = 0;
 var puntuacion  = 0;
+var chequeandoCaramelos = false;
 var timerColorTitulo, timerReloj;
 
 
@@ -78,7 +79,7 @@ async function llenarCaramelos(){
             curCol = '.col-' + (col+1);
             objCol = $(curCol);
             // añade el html y la imagen correspondiente
-            objCol.prepend("<div class='caramelo'>" +
+            objCol.prepend("<div class='contenedorCaramelo' row='"+row+"' col='"+col+"'>" +
                                  "<img class='caramelo' src='image/"+ num +".png' data='"+num+"' row='"+row+"' col='"+col+"'/>"+
                            "</div>");
 
@@ -91,6 +92,8 @@ async function llenarCaramelos(){
         await sleep(220);
     }
 
+    efectoDraggable(); // coloca el efecto para que se muevan las imagenes
+
     chequearCaramelosConsecutivos(); // realiza el chequeo de caramelos consecutivos
 };
 
@@ -99,6 +102,7 @@ async function llenarCaramelos(){
 async function chequearCaramelosConsecutivos(){
     let lastImg, curImg, enImg, cont, init;
     let enCaramelos = []; // caramelos encontrados consecutivos
+    chequeandoCaramelos = true;
 
     // CHEQUEO POR REGISTRO
     // buscamos las coincidencias de caramelos(mas de tres)
@@ -196,6 +200,7 @@ async function chequearCaramelosConsecutivos(){
 
         rellenarFaltantes(); // rellenamos los caramelos faltantes
     }
+    chequeandoCaramelos = false;
 }
 
 // realizamos el rellenado de los caramelos
@@ -263,6 +268,67 @@ function efectoCaidaCaramelos(img, row){
             queue : false
         }
     );
+}
+
+// funcion que captura el efecto de draggable
+function efectoDraggable(){
+    $('.caramelo').draggable({
+        stop: function() {
+            // si ha parado el drag verifica que su posicion sea la deseada
+            // caso contrario retorna a su posicion de origen
+            setTimeout( () => {
+                let top  = $(this).css("top");
+                let left = $(this).css("left");
+                if(top != '0px' || left != '0px'){
+                    $(this).css("position", "relative");
+                    $(this).css("left", "0px");
+                    $(this).css("top", "0px");
+                }
+            }, 50);
+        }
+    });
+    $( ".contenedorCaramelo" ).droppable({
+        drop: function( event, ui ) {
+          let rowCont = $(this).attr('row');
+          let colCont = $(this).attr('col');
+          let rowImg  = $(ui.draggable).attr('row');
+          let colImg  = $(ui.draggable).attr('col');
+          let objImg  = caramelos[rowImg][colImg];
+          let objCont = caramelos[rowCont][colCont];
+          let dataImg = objImg.data;
+          let dataCont = objCont.data;
+          let moveOnePosition = false;
+
+          if(chequeandoCaramelos){ // si esta chequeando los caramelos no permite movimientos
+            objImg.img.css("position", "relative"); // mueve al caramalo a su lugar de origen
+            objImg.img.css("left", "0px");
+            objImg.img.css("top", "0px");
+            return;
+          }
+
+          // solamente si puede colocarse una posicion de la actual cambia las imagenes
+          // caso contrario regresa el caramelos a su lugar de origen
+          if(rowImg == rowCont && Math.abs(colImg - colCont) == 1 ||
+             colImg == colCont && Math.abs(rowImg - rowCont) == 1){
+                objImg.data = dataCont; // coloca los datos de la imagen del contenedor
+                objImg.img.attr('src', "image/"+ dataCont +".png");
+                objImg.img.attr("data", dataCont);
+                objCont.data = dataImg; // vacia la imagen encontrada
+                objCont.img.attr('src', "image/"+ dataImg +".png");
+                objCont.img.attr("data", dataImg);
+                moveOnePosition = true;
+             }
+
+          objImg.img.css("position", "relative"); // mueve al caramalo a su lugar de origen
+          objImg.img.css("left", "0px");
+          objImg.img.css("top", "0px");
+
+          if(moveOnePosition){
+            $('#movimientos-text').text(++movimientos); // añadimos un movimiento
+            chequearCaramelosConsecutivos(); // realiza el chequeo de caramelos consecutivos
+          }
+        }
+      });
 }
 
 // cambia el color del titulo
