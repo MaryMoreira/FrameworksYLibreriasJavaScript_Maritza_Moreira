@@ -26,7 +26,7 @@ function iniciaReloj(){
         let sec =  dt.getSeconds();
         let min =  dt.getMinutes();
 
-        if(min == 0 && sec == 0){
+        if(min == 1 && sec == 0){
             clearInterval(timerReloj);
             mostrarFinalResultados();
             return;
@@ -46,6 +46,9 @@ function iniciarJuego(){
     $(".btn-reinicio").text("Reiniciar");
     $('#score-text').text(puntuacion);
     $('#movimientos-text').text(movimientos);
+
+    $('.panel-tablero').show();
+    $('.score, .moves, .time').css("width","");
 
     // llenamos de caramelos
     llenarCaramelos();
@@ -92,15 +95,15 @@ async function llenarCaramelos(){
 
     efectoDraggable(); // coloca el efecto para que se muevan las imagenes
 
-    chequearCaramelosConsecutivos(); // realiza el chequeo de caramelos consecutivos
+    chequearCaramelosConsecutivos(true); // realiza el chequeo de caramelos consecutivos
 };
 
 // cheuque si existen caramelos consecutivos (tres o mas) de ser
 // el caso otorga una puntuacion al jugador por cada caramelo encontrado
-async function chequearCaramelosConsecutivos(){
+async function chequearCaramelosConsecutivos(prenderChequeo){
     let lastImg, curImg, enImg, cont, init;
     let enCaramelos = []; // caramelos encontrados consecutivos
-    chequeandoCaramelos = true;
+    if(prenderChequeo) chequeandoCaramelos = true;
 
     // CHEQUEO POR REGISTRO
     // buscamos las coincidencias de caramelos(mas de tres)
@@ -193,9 +196,9 @@ async function chequearCaramelosConsecutivos(){
 
         $('#score-text').text(puntuacion); // coloca la actual puntuacion
 
-        rellenarFaltantes(); // rellenamos los caramelos faltantes
+        await rellenarFaltantes(); // rellenamos los caramelos faltantes
     }
-    chequeandoCaramelos = false;
+    if(prenderChequeo) chequeandoCaramelos = false;
 }
 
 // realizamos el rellenado de los caramelos
@@ -239,7 +242,7 @@ async function rellenarFaltantes(){
         }
     }
 
-    chequearCaramelosConsecutivos(); // realiza nuevamente el chequeo de caramelos consecutivos
+    await chequearCaramelosConsecutivos(false); // realiza nuevamente el chequeo de caramelos consecutivos
 }
 
 // funcion que simula la caida de caramelos
@@ -304,7 +307,7 @@ function efectoDraggable(){
 
           if(moveOnePosition){
             $('#movimientos-text').text(++movimientos); // añadimos un movimiento
-            chequearCaramelosConsecutivos(); // realiza el chequeo de caramelos consecutivos
+            chequearCaramelosConsecutivos(true); // realiza el chequeo de caramelos consecutivos
           }
         }
       });
@@ -351,6 +354,27 @@ function cambiaColorTitulo(){
 // funcion que muestra los resultados una vez concluido el tiempo
 function mostrarFinalResultados(){
 
+    $('#timer').text('00:00');
+
+    let tablero = $('.panel-tablero');
+    let width   = tablero.width();
+
+    tablero.hide("drop", {direction : 'left'}, 1000);
+
+    $('.time').hide();
+
+    $('.score, .moves').animate({
+        position : 'absolute',
+        width:  "+="+width,
+        transition: "all 0.2s linear",
+        left : 0,
+        right : 0,
+    },{
+        duration: 1000,
+        queue : false
+    });
+
+    $(".btn-reinicio").text("Iniciar");
 }
 
 // funcion de inicio
