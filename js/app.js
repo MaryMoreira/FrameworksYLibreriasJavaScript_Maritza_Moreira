@@ -26,7 +26,7 @@ function iniciaReloj(){
         let sec =  dt.getSeconds();
         let min =  dt.getMinutes();
 
-        if(min == 1 && sec == 0){
+        if(min == 1 && sec == 55){
             clearInterval(timerReloj);
             mostrarFinalResultados();
             return;
@@ -48,7 +48,9 @@ function iniciarJuego(){
     $('#movimientos-text').text(movimientos);
 
     $('.panel-tablero').show();
-    $('.score, .moves, .time').css("width","");
+    $('.score, .moves, .time, .panel-score').css("width","");
+    $('.time').show();
+    $('.fin').remove();
 
     // llenamos de caramelos
     llenarCaramelos();
@@ -171,7 +173,7 @@ async function chequearCaramelosConsecutivos(prenderChequeo){
 
     // si encontro caramelos modifica la puntuacion
     if(enCaramelos.length > 0){
-        puntuacion += (enCaramelos.length); // añade 1 punto por cada caramelo eliminado
+        puntuacion += (enCaramelos.length * 10); // añade 10 punto por cada caramelo eliminado
 
         // realizamos la animacion de las imagenes a eliminarse
         enCaramelos.forEach ( o => {
@@ -356,23 +358,44 @@ function mostrarFinalResultados(){
 
     $('#timer').text('00:00');
 
-    let tablero = $('.panel-tablero');
-    let width   = tablero.width();
+    let tablero   = $('.panel-tablero');
+    let score     = $('.panel-score');
+    let width     = tablero.width() + $('.score').width() + 20;
+    let scoreLeft = score.position().leftl
 
-    tablero.hide("drop", {direction : 'left'}, 1000);
+
+    //tablero.hide("drop", {direction : 'left'}, 1000);
+
+    tablero.animate({
+        width : 0,
+        height : 0
+    }, {
+        step :  function(now, fx){
+            let widthTablero = tablero.width();
+            let move = width - widthTablero;
+            let left = scoreLeft - move;
+            let styles = {
+                position : 'relative',
+                left : left,
+                width : move
+            }
+            score.css(styles);
+
+        },
+        queue: false,
+        duration: 1000,
+        complete: function(){
+            tablero.hide();
+            tablero.css('width', "");
+            tablero.css('height', "");
+            score.css('position', "");
+            score.css('left', "");
+            score.prepend("<div class='fin'> <h1 class='fin-juego'>Final del Juego</h1> </div>");
+
+        }
+    });
 
     $('.time').hide();
-
-    $('.score, .moves').animate({
-        position : 'absolute',
-        width:  "+="+width,
-        transition: "all 0.2s linear",
-        left : 0,
-        right : 0,
-    },{
-        duration: 1000,
-        queue : false
-    });
 
     $(".btn-reinicio").text("Iniciar");
 }

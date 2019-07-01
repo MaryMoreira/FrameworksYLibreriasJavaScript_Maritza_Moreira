@@ -66,6 +66,17 @@ body{
   font-family: gameFont;
   color: #E8CA06;
 }
+
+.fin-juego{
+  font-family: gameFont;
+  color: #E8CA06;
+}
+
+.fin{
+  display: flex;
+  justify-content: center
+}
+
 .titulo-over{
   font-family: gameFont;
   font-size: 3em;
