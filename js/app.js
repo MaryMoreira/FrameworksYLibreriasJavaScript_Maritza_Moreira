@@ -85,27 +85,10 @@ async function llenarCaramelos(){
             obj.img = $(objCol.find("img[row='"+row+"'][col='"+col+"']")); // obtiene la imagen insertada
             caramelos[row][col] =  obj; // coloca en la matriz el objeto correspondiente
 
-            despTop = ( obj.img[0].heightOffset * (MAX_COL - col) - 30 );
-
-            posImg  = obj.img.position();
-            obj.img.offset ({top: posImg.top - despTop});
-
-            obj.img.animate(
-                {
-                  top:  "+="+despTop,
-                },{
-                  step: function(now, fx){
-                    //$(obj.img).css("position","");
-                  },
-                  duration: 200,
-                  done : () => {
-                    posImg = obj.img.position ();
-                  }
-                }
-              );
+            efectoCaidaCaramelos(obj.img, row); // efecto de caida de caramelos
         }
 
-        await sleep(200);
+        await sleep(220);
     }
 
     chequearCaramelosConsecutivos(); // realiza el chequeo de caramelos consecutivos
@@ -253,14 +236,33 @@ async function rellenarFaltantes(){
                 curImg.img.attr('src', "image/"+ num +".png");
                 curImg.img.attr("data", num);
                 hasImg = true;
+
+                efectoCaidaCaramelos(curImg.img, row); // efecto caida de caramelos
             }
         }
         if(hasImg){
-            await sleep(200);
+            await sleep(220);
         }
     }
 
     chequearCaramelosConsecutivos(); // realiza nuevamente el chequeo de caramelos consecutivos
+}
+
+// funcion que simula la caida de caramelos
+function efectoCaidaCaramelos(img, row){
+    let posIniTop = ( img[0].offsetHeight * (MAX_ROW - row) - 30 ); // obtiene la posicion inicial desde donde la imagen caerá
+    posImg  = img.position();
+
+    img.offset ({top: posImg.top - posIniTop});
+
+    img.animate( // realiza la animacion de caida de caramelos
+        {
+            top:  "+="+posIniTop,
+        },{
+            duration: 200,
+            queue : false
+        }
+    );
 }
 
 // cambia el color del titulo
