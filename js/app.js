@@ -1,7 +1,6 @@
 /******************************************* */
 /* Modulo que controla el juego de caramelos */
 /******************************************* */
-
 const MAX_COL = 7;
 const MAX_ROW = 7;
 
@@ -10,7 +9,6 @@ var movimientos = 0;
 var puntuacion  = 0;
 var chequeandoCaramelos = false;
 var timerColorTitulo, timerReloj;
-
 
 // funcion que inicia el decremento del reloj
 function iniciaReloj(){
@@ -135,7 +133,6 @@ async function chequearCaramelosConsecutivos(){
         }
     }
 
-
     // CHEQUEO POR COLUMNA
     // buscamos las concidencias de caramelos (mas de tres)
     for(let col=0; col < MAX_COL; ++col){
@@ -171,7 +168,7 @@ async function chequearCaramelosConsecutivos(){
 
     // si encontro caramelos modifica la puntuacion
     if(enCaramelos.length > 0){
-        puntuacion += (enCaramelos.length) * 100; // añade 100 punto por cada caramelo eliminado
+        puntuacion += (enCaramelos.length); // añade 1 punto por cada caramelo eliminado
 
         // realizamos la animacion de las imagenes a eliminarse
         enCaramelos.forEach ( o => {
@@ -190,10 +187,8 @@ async function chequearCaramelosConsecutivos(){
 
         // elimina los caramelos encontrados como consecutivos
         await enCaramelos.forEach ( o => {
-            o.obj.img.attr("src", "");// elimina los caramelos
-            o.obj.img.attr("data", "0");// elimina los caramelos
             o.obj.img.css("display", "");
-            o.obj.data = 0;
+            actualizaImagen(o.obj, 0); // elimina los caramelos
         })
 
         $('#score-text').text(puntuacion); // coloca la actual puntuacion
@@ -216,12 +211,8 @@ async function rellenarFaltantes(){
                 for(let enRow=row+1; enRow < MAX_COL; ++enRow){
                     enImg = caramelos[enRow][col];
                     if(enImg.data != 0){
-                        curImg.data = enImg.data; // coloca los datos de la imgen buscada
-                        curImg.img.attr('src', "image/"+ curImg.data +".png");
-                        curImg.img.attr("data", curImg.data);
-                        enImg.data = 0; // vacia la imagen encontrada
-                        enImg.img.attr('src', "");
-                        enImg.img.attr("data", "0");
+                        actualizaImagen(curImg, enImg.data); // coloca los datos de la imagen buscada
+                        actualizaImagen(enImg, 0);           // vacia la imagen encontrada
                         break;
                     }
                 }
@@ -237,9 +228,7 @@ async function rellenarFaltantes(){
 
             if(curImg.data == 0){ // busca si encima tiene alguno que tenga imagen
                 let num = Math.floor(Math.random() * (4 - 1)) + 1; // obtiene un número aleatorio del 1 al 4
-                curImg.data = num; // coloca los datos de la imagen nueva
-                curImg.img.attr('src', "image/"+ num +".png");
-                curImg.img.attr("data", num);
+                actualizaImagen(curImg, num); // coloca los datos de la imagen nueva
                 hasImg = true;
 
                 efectoCaidaCaramelos(curImg.img, row); // efecto caida de caramelos
@@ -280,9 +269,7 @@ function efectoDraggable(){
                 let top  = $(this).css("top");
                 let left = $(this).css("left");
                 if(top != '0px' || left != '0px'){
-                    $(this).css("position", "relative");
-                    $(this).css("left", "0px");
-                    $(this).css("top", "0px");
+                    ubicarImagenPosicionInicial($(this));
                 }
             }, 50);
         }
@@ -300,9 +287,7 @@ function efectoDraggable(){
           let moveOnePosition = false;
 
           if(chequeandoCaramelos){ // si esta chequeando los caramelos no permite movimientos
-            objImg.img.css("position", "relative"); // mueve al caramalo a su lugar de origen
-            objImg.img.css("left", "0px");
-            objImg.img.css("top", "0px");
+            ubicarImagenPosicionInicial(objImg.img);
             return;
           }
 
@@ -310,18 +295,12 @@ function efectoDraggable(){
           // caso contrario regresa el caramelos a su lugar de origen
           if(rowImg == rowCont && Math.abs(colImg - colCont) == 1 ||
              colImg == colCont && Math.abs(rowImg - rowCont) == 1){
-                objImg.data = dataCont; // coloca los datos de la imagen del contenedor
-                objImg.img.attr('src', "image/"+ dataCont +".png");
-                objImg.img.attr("data", dataCont);
-                objCont.data = dataImg; // vacia la imagen encontrada
-                objCont.img.attr('src', "image/"+ dataImg +".png");
-                objCont.img.attr("data", dataImg);
+                actualizaImagen(objImg,  dataCont); // coloca los datos de la imagen del contenedor
+                actualizaImagen(objCont, dataImg); // coloca los datos de la imagen que fue movida
                 moveOnePosition = true;
              }
 
-          objImg.img.css("position", "relative"); // mueve al caramalo a su lugar de origen
-          objImg.img.css("left", "0px");
-          objImg.img.css("top", "0px");
+          ubicarImagenPosicionInicial(objImg.img);
 
           if(moveOnePosition){
             $('#movimientos-text').text(++movimientos); // añadimos un movimiento
@@ -330,6 +309,25 @@ function efectoDraggable(){
         }
       });
 }
+
+// coloca la imagen en la posicion inicial
+function ubicarImagenPosicionInicial(img){
+    img.css("position", "relative"); // mueve al caramalo a su lugar de origen
+    img.css("left", "0px");
+    img.css("top", "0px");
+}
+
+// actualiza los datos de la imagen
+function actualizaImagen(objImg, data){
+    objImg.data = data; // coloca el dato de la imagen (1,2,3, o 4)
+    objImg.img.attr("data", data);
+    if(data == 0 ){
+        objImg.img.attr('src', "");
+    }else{
+        objImg.img.attr('src', "image/"+ data +".png");
+    }
+}
+
 
 // cambia el color del titulo
 function cambiaColorTitulo(){
@@ -350,15 +348,12 @@ function cambiaColorTitulo(){
     }, 500);
 }
 
-
-
 // funcion que muestra los resultados una vez concluido el tiempo
 function mostrarFinalResultados(){
 
 }
 
-
-// funcion document
+// funcion de inicio
 $(function(){
 
     // realiza el cambio de color del titulo
