@@ -26,7 +26,7 @@ function iniciaReloj(){
         let sec =  dt.getSeconds();
         let min =  dt.getMinutes();
 
-        if(min == 1 && sec == 55){
+        if(min == 0 && sec == 0){
             clearInterval(timerReloj);
             mostrarFinalResultados();
             return;
@@ -265,7 +265,7 @@ function efectoCaidaCaramelos(img, row){
 }
 
 // funcion que captura el efecto de draggable
-function efectoDraggable(){
+async function efectoDraggable(){
     $('.caramelo').draggable({
         stop: function() {
             // si ha parado el drag verifica que su posicion sea la deseada
@@ -289,7 +289,6 @@ function efectoDraggable(){
           let objCont = caramelos[rowCont][colCont];
           let dataImg = objImg.data;
           let dataCont = objCont.data;
-          let moveOnePosition = false;
 
           if(chequeandoCaramelos){ // si esta chequeando los caramelos no permite movimientos
             ubicarImagenPosicionInicial(objImg.img);
@@ -300,17 +299,31 @@ function efectoDraggable(){
           // caso contrario regresa el caramelos a su lugar de origen
           if(rowImg == rowCont && Math.abs(colImg - colCont) == 1 ||
              colImg == colCont && Math.abs(rowImg - rowCont) == 1){
-                actualizaImagen(objImg,  dataCont); // coloca los datos de la imagen del contenedor
-                actualizaImagen(objCont, dataImg); // coloca los datos de la imagen que fue movida
-                moveOnePosition = true;
+                let moveValue = {};
+
+                if(rowImg == rowCont){
+                    moveValue.left = ((colImg - colCont) > 0 ? '+=' : '-=') + objCont.img.width();
+                }else{
+                    moveValue.top  = ((rowImg - rowCont) > 0 ? '-=' : '+=') + objCont.img.height();
+                }
+
+                objCont.img.animate(moveValue,{
+                    duration: 250,
+                    queue : true,
+                    complete: function(){
+                        actualizaImagen(objCont, dataImg); // coloca los datos de la imagen que fue movida
+                        ubicarImagenPosicionInicial(objCont.img);
+
+                        actualizaImagen(objImg,  dataCont); // coloca los datos de la imagen del contenedor
+                        ubicarImagenPosicionInicial(objImg.img);
+
+                        $('#movimientos-text').text(++movimientos); // añadimos un movimiento
+                        chequearCaramelosConsecutivos(true); // realiza el chequeo de caramelos consecutivos
+                    }
+                });
+                return;
              }
-
-          ubicarImagenPosicionInicial(objImg.img);
-
-          if(moveOnePosition){
-            $('#movimientos-text').text(++movimientos); // añadimos un movimiento
-            chequearCaramelosConsecutivos(true); // realiza el chequeo de caramelos consecutivos
-          }
+             ubicarImagenPosicionInicial(objImg.img);
         }
       });
 }
