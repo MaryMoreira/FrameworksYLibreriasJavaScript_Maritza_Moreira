@@ -8,7 +8,7 @@ var caramelos   = [];
 var movimientos = 0;
 var puntuacion  = 0;
 var chequeandoCaramelos = false;
-var timerColorTitulo, timerReloj;
+var timerColorTitulo, timerReloj, finJuego = false;
 
 // funcion que inicia el decremento del reloj
 function iniciaReloj(){
@@ -41,6 +41,7 @@ function iniciaReloj(){
 function iniciarJuego(){
     puntuacion  = 0;
     movimientos = 0;
+    finJuego    = false;
 
     // inicializamos los textos
     $(".btn-reinicio").text("Reiniciar");
@@ -173,8 +174,9 @@ async function chequearCaramelosConsecutivos(prenderChequeo){
 
     // si encontro caramelos modifica la puntuacion
     if(enCaramelos.length > 0){
-        puntuacion += (enCaramelos.length * 10); // añade 10 punto por cada caramelo eliminado
-
+        if(!finJuego){
+          puntuacion += (enCaramelos.length * 10); // añade 10 punto por cada caramelo eliminado
+        }
         // realizamos la animacion de las imagenes a eliminarse
         enCaramelos.forEach ( o => {
             o.obj.img.hide(350, 'swing', function () {
@@ -187,9 +189,7 @@ async function chequearCaramelosConsecutivos(prenderChequeo){
               });
             });
         })
-
         await sleep(2000);
-
         // elimina los caramelos encontrados como consecutivos
         await enCaramelos.forEach ( o => {
             o.obj.img.css("display", "");
@@ -276,7 +276,7 @@ async function efectoDraggable(){
                 if(top != '0px' || left != '0px'){
                     ubicarImagenPosicionInicial($(this));
                 }
-            }, 50);
+            }, 250);
         }
     });
     $( ".contenedorCaramelo" ).droppable({
@@ -308,7 +308,7 @@ async function efectoDraggable(){
                 }
 
                 objCont.img.animate(moveValue,{
-                    duration: 250,
+                    duration: 200,
                     queue : true,
                     complete: function(){
                         actualizaImagen(objCont, dataImg); // coloca los datos de la imagen que fue movida
@@ -355,7 +355,7 @@ function cambiaColorTitulo(){
         clearInterval(timerColorTitulo);
     }
 
-    setInterval( () => {
+    timerColorTitulo = setInterval( () => {
         if(cambiarTitulo == 0){
             cambiarTitulo = 1;
             $('.main-titulo').css('color', '');
@@ -374,10 +374,9 @@ function mostrarFinalResultados(){
     let tablero   = $('.panel-tablero');
     let score     = $('.panel-score');
     let width     = tablero.width() + $('.score').width() + 20;
-    let scoreLeft = score.position().leftl
+    let scoreLeft = score.position().left;
 
-
-    //tablero.hide("drop", {direction : 'left'}, 1000);
+    finJuego = true; // finaliza el juego
 
     tablero.animate({
         width : 0,
@@ -404,7 +403,6 @@ function mostrarFinalResultados(){
             score.css('position', "");
             score.css('left', "");
             score.prepend("<div class='fin'> <h1 class='fin-juego'>Final del Juego</h1> </div>");
-
         }
     });
 
